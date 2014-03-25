@@ -9,45 +9,93 @@ var   _ = require('lodash'),
  Scythe = require('../index');
 
 colors.setTheme({
-  file: 'green',
-  dir: 'blue',
-  data: 'grey',
-  error: 'red'
+  file  : 'green',
+  dir   : 'blue',
+  data  : 'grey',
+  error : 'red'
 });
 
-opts = require("nomnom")
-  .option('force', {
-    abbr: 'f',
-    flag: true,
-    help: 'force file deletion'
-  })
-  .option('threshold', { 
-    abbr: 't',
-    default: '7d',
-    help: 'file deletion threshold',
-    callback : function (threshold) {
-      if (! ms(threshold)) return "Error: Threshold unparsable.".error + "\nExamples: 100, 5s, 10m, 6h, 3d";
-    }
-  })
-  .option('verbose', { 
-    abbr: 'v',
-    flag : true
-  })
-  .parse();
+var opts = parseArgs();
 
+if (! opts.threshold) {
+  console.log('Error:'.error.bold + ' Must specify threshold'.error);
+  parseArgs(['-h']);
+}
+
+var threshold = moment(new Date - ms(opts.threshold));
+if (threshold.isValid()) {
+  opts.threshold = threshold.toDate();
+} else {
+  console.log('Error:'.error.bold + ' Threshold unparsable.'.error);
+  parseArgs(['-h']);
+}
 
 opts._ = _.uniq(opts._);
 if (opts._.length === 0) opts._ = ['.'];
 opts.searchPaths = opts._;
-opts.threshold = moment(new Date - ms(opts.threshold)).toDate();
 
-async.every(opts._, isValidDirectory, function (res) {
+
+async.every(opts.searchPaths, isValidDirectory, function (res) {
   if (res) {
     var scythe = new Scythe(opts);
-    scythe.execute(function () {});
+
+    if (scythe.verbose) {
+
+      var mode = scythe.simulation ? "simulation" : "active";
+      console.log("\nScythe".bold + " running in ".data + mode.data.bold + " mode".data);
+      var paths = scythe.searchPaths.join(", ");
+      console.log('Searching '.data + paths.data.bold);
+      var threshold = moment(scythe.threshold).toString();
+      console.log('Removing files older than '.data + threshold.data.bold);
+      console.log('-----------------------------------------------------------\n'.data);
+
+      scythe.on('preserveFile', function (f) {
+        console.log('File Preserved '.file, f.data);
+      });
+      scythe.on('preserveDir', function (d) {
+        console.log('Dir  Preserved '.dir, d.data)
+      });
+      scythe.on('unlinkFile', function (f) {
+        console.log('File Unlinked '.dir, f.data)
+
+      });
+      scythe.on('unlinkDir', function (d) {
+        console.log('Dir  Unlinked '.dir, d.data)
+      });
+    }
+
+    scythe.execute(function () {
+      console.log('\n' + 'scythe'.bold + ' complete');
+    });
+
   }
 });
 
+
+function parseArgs (argv) {
+  if (! argv) {
+    argv = process.argv;
+    argv.shift();
+    argv.shift();
+  }
+
+  return require("nomnom")
+    .script('scythe')
+    .option('force', {
+      abbr: 'f',
+      flag: true,
+      help: 'force file deletion'
+    })
+    .option('threshold', { 
+      abbr: 't',
+      help: 'file age threshold for deletion. Age such as 100, 5s, 10m, 6h, 3d are parsed'
+    })
+    .option('verbose', { 
+      abbr: 'v',
+      flag : true
+    })
+    .parse(argv);
+}
 
 
 function isValidDirectory (dir, cb) {

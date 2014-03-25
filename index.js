@@ -1,11 +1,11 @@
 var   _ = require('lodash'),
      fs = require('fs'),
-     ms = require('ms'),
    path = require('path'),
+   util = require('util'),
   async = require('async'),
- colors = require('colors'),
  findit = require('findit'),
- moment = require('moment');
+ moment = require('moment'),
+ events = require('events');
 
 
 module.exports = Scythe;
@@ -20,9 +20,11 @@ function Scythe (opts) {
   this.truncate    = opts.truncate    || true;
   this.limit       = opts.limit       || 5;
   this.simulation  = ! opts.force;
-  this.verbose     = opts.verbose || this.simulation;
+  this.verbose     = opts.verbose     || this.simulation;
 }
 
+
+util.inherits(Scythe, events.EventEmitter);
 
 
 Scythe.prototype.walkPath = function (dir, cb) {
@@ -39,12 +41,12 @@ Scythe.prototype.walkPath = function (dir, cb) {
     if (stat.mtime < self.threshold) {
       try {
         if (! self.simulation) fs.unlinkSync(path.resolve(file));
-        if (self.verbose || self.simulation) console.log("File Unlinked:  ".file + file.file.bold);
+        self.emit('unlinkFile', file);
       } catch (e) {
-        console.error("Could not unlink ".error + file.error.bold);
+        self.emit('error', e);
       }
     } else {
-      if (self.verbose || self.simulation) console.log("File Preserved: ".data + file.data.bold);
+      self.emit('preserveFile', file);
     }
   });
 
@@ -71,23 +73,14 @@ Scythe.prototype.sortDirectories = function (dirs) {
 
 
 Scythe.prototype.execute = function (cb) {
+  var self = this;
 
-  if (this.verbose) {
-    var mode = this.simulation ? "simulation" : "active";
-    console.log("\nScythe".bold + " running in ".data + mode.data.bold + " mode".data);
-    var paths = this.searchPaths.join(", ");
-    console.log('Searching '.data + paths.data.bold);
-    var threshold = moment(this.threshold).toString();
-    console.log('Removing files older than '.data + threshold.data.bold);
-    console.log('-----------------------------------------------------------\n'.data);
-  }
-
-  async.each(this.searchPaths, this.walkPath.bind(this), function (err) {
-    if (err) {
-      console.error(err);
-      return cb(err);
+  async.each(this.searchPaths, this.walkPath.bind(this), function (e) {
+    if (e) {
+      self.emit('error', e);
+      return cb(e);
     } else {
-      console.log('\n\nScythe Complete\n\n'.bold);
+      self.emit('complete');
       return cb();
     }
   });
@@ -103,15 +96,15 @@ Scythe.prototype.truncateDirs = function (dirs) {
     var files = fs.readdirSync(dir);
 
     if (files.length > 0) {
-      if (self.verbose || self.simulation) console.log("Dir  Preserved: ".data + dir.data.bold);
+      self.emit('preserveDir', dir);
       return;
     }
 
     try {
       if (! self.simulation) fs.rmdirSync(path.resolve(dir));
-      if (self.verbose || self.simulation) console.log("Dir  Unlinked:  ".dir + dir.dir.bold);
+      self.emit('unlinkDir', dir);
     } catch (e) {
-      console.error("Could not unlink ".error + dir.error.bold);
+      self.emit('error', e);
     }
   });
 };
