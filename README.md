@@ -26,3 +26,5 @@ Scythe's directory listing in simulation mode differs from ```force``` mode due 
 ###License:
 
 MIT
+
+[![Build Status](https://travis-ci.org/emgee3/scythe.png)](https://travis-ci.org/emgee3/scythe)

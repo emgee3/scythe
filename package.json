@@ -17,6 +17,7 @@
     "mocha"   : "~1.18.2",
     "mock-fs" : "~2.2.0"
     },
+  "engine" : "~0.10",
   "scripts": {
     "test": "mocha test"
   },
