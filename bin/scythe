@@ -57,10 +57,12 @@ async.every(opts.searchPaths, isValidDirectory, function (res) {
       });
       scythe.on('unlinkFile', function (f) {
         console.log('File Unlinked '.dir, f.data)
-
       });
       scythe.on('unlinkDir', function (d) {
         console.log('Dir  Unlinked '.dir, d.data)
+      });
+      scythe.on('error', function (e) {
+        console.log('Error: '.error.bold, e);
       });
     }
 

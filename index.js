@@ -39,12 +39,14 @@ Scythe.prototype.walkPath = function (dir, cb) {
 
   finder.on('file', function (file, stat) {
     if (stat.mtime < self.threshold) {
-      try {
-        if (! self.simulation) fs.unlinkSync(path.resolve(file));
-        self.emit('unlinkFile', file);
-      } catch (e) {
-        self.emit('error', e);
+      if (! self.simulation) {
+        try {
+          fs.unlinkSync(path.resolve(file));
+        } catch (e) {
+          self.emit('error', JSON.stringify(e));
+        }
       }
+      self.emit('unlinkFile', file);
     } else {
       self.emit('preserveFile', file);
     }
@@ -77,8 +79,8 @@ Scythe.prototype.execute = function (cb) {
 
   async.each(this.searchPaths, this.walkPath.bind(this), function (e) {
     if (e) {
-      self.emit('error', e);
-      return cb(e);
+      self.emit('error', JSON.stringify(e));
+      return cb(JSON.stringify(e));
     } else {
       self.emit('complete');
       return cb();
@@ -104,7 +106,7 @@ Scythe.prototype.truncateDirs = function (dirs) {
       if (! self.simulation) fs.rmdirSync(path.resolve(dir));
       self.emit('unlinkDir', dir);
     } catch (e) {
-      self.emit('error', e);
+      self.emit('error', JSON.stringify(e));
     }
   });
 };
