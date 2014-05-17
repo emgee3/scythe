@@ -1,52 +1,42 @@
-var fs = require('fs'),
-  mock = require('mock-fs'),
-assert = require('assert'),
-Scythe = require('../index');
+var Lab = require('lab'),
+     fs = require('fs'),
+   mock = require('mock-fs'),
+ Scythe = require('../index');
 
-var prepareMocks = function () {
-  mock({
-    'mockfs': {
-      'file-new' : 'new',
-      'file-old' : mock.file({ mtime : new Date(1), mtime : new Date(1), contents : 'old' }),
-      'folder-empty' : {/** empty directory */},
-      'folder-new'   : {
-        'file-new' : 'new'
-      },
-      'folder-old' : {
-        'file-old' : mock.file({ mtime : new Date(1), mtime : new Date(1), contents : 'old' })
-      }
-    }
-  });
-}
 
-describe('Default Instantiation', function () {
+Lab.experiment('Default Instantiation', function () {
   var def = new Scythe();
 
-  it('should have a threshold of 1 week', function () {
+  Lab.test('should have a threshold of 1 week', function (done) {
     var diff = (new Date() - 604800000) - def.threshold;
-    assert(diff < 60000);
+    Lab.expect(diff < 60000).to.equal(true);
+    done();
   });
 
-  it('should be in simulation mode', function () {
-    assert(def.simulation);
+  Lab.test('should be in simulation mode', function (done) {
+    Lab.expect(def.simulation).to.equal(true);
+    done();
   });
 
-  it('should truncate empty directories', function () {
-    assert(def.truncate);
+  Lab.test('should truncate empty directories', function (done) {
+    Lab.expect(def.truncate).to.equal(true);
+    done();
   });
 
-  it('should limit to 5 async functions', function () {
-    assert.equal(def.limit, 5);
+  Lab.test('should limit to 5 async functions', function (done) {
+    Lab.expect(def.limit, 5).to.equal(5);
+    done();
   });
 
-  it('should be in verbose mode', function () {
-    assert(def.verbose);
+  Lab.test('should be in verbose mode', function (done) {
+    Lab.expect(def.verbose).to.equal(true);
+    done();
   });
 });
 
 
 
-describe('Custom Instantiation', function () {
+Lab.experiment('Custom Instantiation', function () {
   var custom = new Scythe({
     threshold   : new Date(50000),
     force       : true,
@@ -56,69 +46,92 @@ describe('Custom Instantiation', function () {
     limit       : 10
   });
 
-  it('should recognize custom threshold', function () {
+  Lab.test('should recognize custom threshold', function (done) {
     var diff = custom.threshold - new Date(50000);
-    assert(diff < 60000);
+    Lab.expect(diff < 60000).to.equal(true);
+    done();
   });
 
-  it('should accept non-simulation mode', function () {
-    assert(! custom.simulation);
+  Lab.test('should accept non-simulation mode', function (done) {
+    Lab.expect(custom.simulation).to.equal(false);
+    done();
   });
 
-  it('should truncate empty directories', function () {
-    assert(custom.truncate);
+  Lab.test('should truncate empty directories', function (done) {
+    Lab.expect(custom.truncate).to.equal(true);
+    done();
   });
 
-  it('should allow limit setting', function () {
-    assert.equal(custom.limit, 10);
+  Lab.test('should allow limit setting', function (done) {
+    Lab.expect(custom.limit).to.equal(10);
+    done();
   });
 
-  it('should allow verbose override', function () {
-    assert(custom.verbose);
+  Lab.test('should allow verbose override', function (done) {
+    Lab.expect(custom.verbose).to.equal(true);
+    done();
   });
 });
 
 
 
-describe('Directory removal', function() {
-  beforeEach(function() {
-    prepareMocks();
+Lab.experiment('Directory removal', function() {
+  Lab.beforeEach(function (done) {
+    mock({
+      'mockfs': {
+        'file-new' : 'new',
+        'file-old' : mock.file({ mtime : new Date(1), ctime : new Date(1), contents : 'old' }),
+        'folder-empty' : {/* empty directory */},
+        'folder-new'   : {
+          'file-new' : 'new'
+        },
+        'folder-old' : {
+          'file-old' : mock.file({ mtime : new Date(1), ctime : new Date(1), contents : 'old' })
+        }
+      }
+    });
+    done();
   });
 
-  it('should delete empty directories', function() {
+
+  Lab.test('should delete empty directories', function (done) {
     var scythe = new Scythe({ force : true, searchPaths : [ 'mockfs' ] });
     scythe.execute(function () {
       var res = fs.readdirSync('mockfs');
-      assert.equal(res.indexOf('folder-empty'), -1);
-      assert.equal(res.indexOf('folder-old'), -1);
+      Lab.expect(res.indexOf('folder-empty')).to.equal(-1);
+      Lab.expect(res.indexOf('folder-old')).to.equal(-1);
       mock.restore();
+      done();
     });
   });
 
-  it('should preserve unempty directories', function() {
+  Lab.test('should preserve unempty directories', function (done) {
     var scythe = new Scythe({ force : true, searchPaths : [ 'mockfs' ] });
     scythe.execute(function () {
       var res = fs.readdirSync('mockfs');
-      assert(res.indexOf('folder-new') > -1);
+      Lab.expect(res.indexOf('folder-new') > -1).to.equal(true);
       mock.restore();
+      done();
     });
   });
 
-  it('should delete old files', function() {
+  Lab.test('should delete old files', function (done) {
     var scythe = new Scythe({ force : true, searchPaths : [ 'mockfs' ] });
     scythe.execute(function () {
       var res = fs.readdirSync('mockfs');
-      assert(res.indexOf('file-new') > -1);
+      Lab.expect(res.indexOf('file-new') > -1).to.equal(true);
       mock.restore();
+      done();
     });
   });
 
-  it('should preserve new files', function() {
+  Lab.test('should preserve new files', function (done) {
     var scythe = new Scythe({ force : true, searchPaths : [ 'mockfs' ] });
     scythe.execute(function () {
       var res = fs.readdirSync('mockfs');
-      assert.equal(res.indexOf('file-old'), -1);
+      Lab.expect(res.indexOf('file-old')).to.equal(-1);
       mock.restore();
+      done();
     });
   });
 

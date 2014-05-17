@@ -14,12 +14,12 @@
     "moment" : "~2.5.0"
   },
   "devDependencies": {
-    "mocha"   : "~1.18.2",
-    "mock-fs" : "~2.2.0"
-    },
-  "engine" : "~0.10",
+    "mock-fs": "~2.3.1",
+    "lab": "~3.1.1"
+  },
+  "engine": "~0.10",
   "scripts": {
-    "test": "mocha test"
+    "test": "./node_modules/.bin/lab"
   },
   "bugs" : {
     "url" : "http://github.com/emgee3/scythe/issues"
