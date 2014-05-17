@@ -20,15 +20,20 @@
   "scripts": {
     "test": "./node_modules/.bin/lab"
   },
-  "bugs" : {
-    "url" : "http://github.com/emgee3/scythe/issues"
+  "bugs": {
+    "url": "http://github.com/emgee3/scythe/issues"
   },
-  "keywords" : [ "temp", "tmp", "delete", "clean" ],
+  "keywords": [
+    "temp",
+    "tmp",
+    "delete",
+    "clean"
+  ],
   "author": "emgee",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/emgee3/scythe.git"
   },
-  "bin" : "bin/scythe"
+  "bin": "bin/scythe"
 }

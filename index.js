@@ -3,10 +3,9 @@ var   _ = require('lodash'),
    path = require('path'),
    util = require('util'),
   async = require('async'),
- findit = require('findit'),
  moment = require('moment'),
- events = require('events');
-
+ events = require('events'),
+ findit = require('findit');
 
 module.exports = Scythe;
 
@@ -29,7 +28,7 @@ util.inherits(Scythe, events.EventEmitter);
 
 Scythe.prototype.walkPath = function (dir, cb) {
   var self = this;
-  var finder = require('findit')(dir);
+  var finder = findit(dir);
   var dirs = [];
 
   finder.on('directory', function (d, stat, stop) {
