@@ -55,7 +55,7 @@ Scythe.prototype.walkPath = function (dir, cb) {
     dirs = self.sortDirectories(dirs);
     if (self.truncate) {
       self.truncateDirs(dirs);
-    } 
+    }
     return cb(null);
   });
 };
